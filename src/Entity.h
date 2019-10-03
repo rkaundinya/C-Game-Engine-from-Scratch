@@ -22,7 +22,7 @@ class Entity
         std::string entityName;
         Entity(EntityManager& manager);
         Entity(EntityManager& manager, std::string name);
-        //std::string print(); 
+        void ListAllComponents() const;
         void Update(float deltaTime);
         void Render();
         void Destroy();
@@ -43,6 +43,19 @@ class Entity
         T* GetComponent()
         {
             return static_cast <T*>(componentTypeMap[&typeid(T)]);
+        }
+        
+        template <typename T>
+        bool HasComponent() const
+        {
+            if (componentTypeMap.find(&typeid(T)) == componentTypeMap.end())
+            {
+                return false; 
+            }
+            else
+            {
+                return true;
+            }
         }
 };
 

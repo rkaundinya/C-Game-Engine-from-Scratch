@@ -11,12 +11,6 @@ Entity::Entity(EntityManager& manager, std::string name):
     this->isActive = true; 
 }
 
-/* std::string Entity::print()
-{
-    std::cout << "Entity name: " << entityName << std::endl;
-    //std::cout << 
-} */
-
 void Entity::Update(float deltaTime)
 {
     for (auto& component:components)
@@ -40,4 +34,12 @@ void Entity::Destroy()
 
 bool Entity::IsActive() const{
     return this->isActive; 
+}
+
+void Entity::ListAllComponents() const
+{
+    for (auto mapElement: componentTypeMap)
+    {
+        std::cout << "   Component<" << mapElement.first->name() << ">" << std::endl;
+    }
 }
