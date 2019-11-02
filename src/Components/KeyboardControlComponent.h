@@ -85,7 +85,6 @@ class KeyboardControlComponent: public Component
                     }
                     else
                     {
-                        std::cout << transform->position.y << std::endl;
                         transform->velocity.y = 10; 
                         transform->velocity.x = 0;
                         sprite->Play("DownAnimation");
