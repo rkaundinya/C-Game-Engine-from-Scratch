@@ -16,11 +16,6 @@ void EntityManager::ClearData()
     }
 }
 
-bool EntityManager::HasNoEntities()
-{
-    return entities.size() == 0;
-}
-
 void EntityManager::Update(float deltaTime)
 {
     for (auto& entity: entities) 
@@ -31,15 +26,23 @@ void EntityManager::Update(float deltaTime)
 
 void EntityManager::Render()
 {
-    for (auto& entity: entities)
+    for (int layerNumber = 0; layerNumber < NUM_LAYERS; ++layerNumber)
     {
-        entity->Render();
+        for (auto& entity : GetEntitiesByLayer(static_cast<LayerType>(layerNumber)))
+        {
+            entity->Render();
+        }
     }
 }
 
-Entity& EntityManager::AddEntity(std::string entityName)
+bool EntityManager::HasNoEntities()
 {
-    Entity *entity = new Entity(*this, entityName);
+    return entities.size() == 0;
+}
+
+Entity& EntityManager::AddEntity(std::string entityName, LayerType layer)
+{
+    Entity *entity = new Entity(*this, entityName, layer);
     entities.emplace_back(entity); //emplace_back is the same as push, adds entity to end of vector list
     return *entity;
 }
@@ -47,6 +50,21 @@ Entity& EntityManager::AddEntity(std::string entityName)
 std::vector<Entity*> EntityManager::GetEntities() const
 {
     return entities;
+}
+
+std::vector<Entity*> EntityManager::GetEntitiesByLayer(LayerType layer) const
+{
+    std::vector<Entity*> selectedEntities; 
+    
+    for (auto& entity : entities)
+    {
+        if (entity->layer == layer)
+        {
+            selectedEntities.emplace_back(entity);
+        }
+    }
+
+    return selectedEntities;
 }
 
 unsigned int EntityManager::GetEntityCount()

@@ -59,7 +59,7 @@ class KeyboardControlComponent: public Component
                         transform->velocity.y = 0;
                     }
                     else {
-                        transform->velocity.y = -10; 
+                        transform->velocity.y = -20; 
                         transform->velocity.x = 0;
                         sprite->Play("UpAnimation");
                     }
@@ -73,7 +73,7 @@ class KeyboardControlComponent: public Component
                     else
                     {
                         transform->velocity.y = 0; 
-                        transform->velocity.x = 10;
+                        transform->velocity.x = 20;
                         sprite->Play("RightAnimation");
                     }
                 }
@@ -85,7 +85,7 @@ class KeyboardControlComponent: public Component
                     }
                     else
                     {
-                        transform->velocity.y = 10; 
+                        transform->velocity.y = 20; 
                         transform->velocity.x = 0;
                         sprite->Play("DownAnimation");
                     }
@@ -99,7 +99,7 @@ class KeyboardControlComponent: public Component
                     else
                     {
                         transform->velocity.y = 0; 
-                        transform->velocity.x = -10;
+                        transform->velocity.x = -20;
                         sprite->Play("LeftAnimation");
                     }
                 }
