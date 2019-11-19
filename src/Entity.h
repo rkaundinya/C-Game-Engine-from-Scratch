@@ -41,6 +41,12 @@ class Entity
             return *newComponent;
         }
 
+        /* template <typename T>
+        bool HasComponent() const
+        {
+            return componentTypeMap.count(&typeid(T));
+        } */
+
         template <typename T>
         T* GetComponent()
         {

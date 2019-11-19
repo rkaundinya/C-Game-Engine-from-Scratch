@@ -5,7 +5,9 @@
 #include "./Map.h"
 #include "./Components/TransformComponent.h"
 #include "./Components/SpriteComponent.h"
+#include "./Components/ColliderComponent.h"
 #include "./Components/KeyboardControlComponent.h"
+#include "./Components/TextLabelComponent.h"
 #include "../lib/glm/glm.hpp"
 
 EntityManager manager;
@@ -20,22 +22,25 @@ Game::Game()
     this->isRunning = false;
 }
 
-Game::~Game()
-{}
+Game::~Game() {}
 
 bool Game::IsRunning() const 
 {
     return this->isRunning;
 }
 
-void Game::Initialize(int width, int height)
+void Game::Initialize(int width, int height) 
 {
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
+    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) 
     {
-        std::cerr << "Error initilializing SDL." << std::endl;
+        std::cerr << "Error initializing SDL." << std::endl;
         return;
     }
-
+    if (TTF_Init() != 0) 
+    {
+        std::cerr << "Error initializing SDL TTF" << std::endl;
+        return;
+    }
     window = SDL_CreateWindow(
         NULL,
         SDL_WINDOWPOS_CENTERED,
@@ -44,16 +49,13 @@ void Game::Initialize(int width, int height)
         height,
         SDL_WINDOW_BORDERLESS
     );
-    
-    if (!window)
+    if (!window) 
     {
         std::cerr << "Error creating SDL window." << std::endl;
         return;
     }
-    // -1 below means get the default driver for renderer, 0 means don't set any flags
     renderer = SDL_CreateRenderer(window, -1, 0);
-    
-    if (!renderer)
+    if (!renderer) 
     {
         std::cerr << "Error creating SDL renderer." << std::endl;
         return;
@@ -65,51 +67,67 @@ void Game::Initialize(int width, int height)
     return;
 }
 
+
 Entity& player(manager.AddEntity("chopper", PLAYER_LAYER));
 
-void Game::LoadLevel(int levelNumber)
+void Game::LoadLevel(int levelNumber) 
 {
-    // Start including new assets to the assetmanager list
-    assetManager->AddTexture("tank-image", 
-        std::string("./assets/images/tank-big-right.png").c_str());
+    /* Start including new assets to the assetmanager list */
+    assetManager->AddTexture("tank-image", std::string("./assets/images/tank-big-right.png").c_str());
     assetManager->AddTexture("chopper-image", 
         std::string("./assets/images/chopper-spritesheet.png").c_str());
-    assetManager->AddTexture("radar-image", std::string("./assets/images/radar.png").c_str());
-    assetManager->AddTexture("jungle-tiletexture", std::string("/assets/tilemaps/jungle.png").c_str());
+    assetManager->AddTexture("radar-image", 
+        std::string("./assets/images/radar.png").c_str());
+    assetManager->AddTexture("jungle-tiletexture", 
+        std::string("./assets/tilemaps/jungle.png").c_str());
+    assetManager->AddTexture("heliport-image", 
+        std::string("./assets/images/heliport.png").c_str());
+    assetManager->AddFont("charriot-font", 
+        std::string("./assets/fonts/charriot.ttf").c_str(), 14);
 
     map = new Map("jungle-tiletexture", 2, 32);
     map->LoadMap("./assets/tilemaps/jungle.map", 25, 20);
 
-    // Add entities and add components to the entities
+    /* Start including entities and also components to them */
     player.AddComponent<TransformComponent>(240, 106, 0, 0, 32, 32, 1);
     player.AddComponent<SpriteComponent>("chopper-image", 2, 90, true, false);
     player.AddComponent<KeyboardControlComponent>("up", "right", "down", "left", "space");
+    player.AddComponent<ColliderComponent>("PLAYER", 240, 106, 32, 32);
 
     Entity& tankEntity(manager.AddEntity("tank", ENEMY_LAYER));
-    tankEntity.AddComponent<TransformComponent>(0, 0, 20, 20, 32, 32, 1);
+    tankEntity.AddComponent<TransformComponent>(150, 495, 5, 0, 32, 32, 1);
     tankEntity.AddComponent<SpriteComponent>("tank-image");
+    tankEntity.AddComponent<ColliderComponent>("ENEMY", 150, 495, 32, 32);
+
+    Entity& heliport(manager.AddEntity("Heliport", OBSTACLE_LAYER));
+    heliport.AddComponent<TransformComponent>(470, 420, 0, 0, 32, 32, 1);
+    heliport.AddComponent<SpriteComponent>("heliport-image");
+    heliport.AddComponent<ColliderComponent>("LEVEL_COMPLETE", 470, 420, 32, 32);
 
     Entity& radarEntity(manager.AddEntity("Radar", UI_LAYER));
     radarEntity.AddComponent<TransformComponent>(720, 15, 0, 0, 64, 64, 1);
     radarEntity.AddComponent<SpriteComponent>("radar-image", 8, 150, false, true);
 
-    manager.ListAllEntities();
+    Entity& labelLevelName(manager.AddEntity("LabelLevelName", UI_LAYER));
+    labelLevelName.AddComponent<TextLabelComponent>(10, 10, "First Level...", 
+        "charriot-font", WHITE_COLOR);
 }
 
-void Game::ProcessInput()
+void Game::ProcessInput() 
 {
     SDL_PollEvent(&event);
-    switch (event.type)
+    switch (event.type) 
     {
         case SDL_QUIT: 
         {
             isRunning = false;
             break;
         }
-        case SDL_KEYDOWN:
+        case SDL_KEYDOWN: 
         {
-            if (event.key.keysym.sym == SDLK_ESCAPE)
+            if (event.key.keysym.sym == SDLK_ESCAPE) {
                 isRunning = false;
+            }
         }
         default: 
         {
@@ -118,36 +136,34 @@ void Game::ProcessInput()
     }
 }
 
-void Game::Update()
+void Game::Update() 
 {
-    // Wait until 16ms has elapsed since last frame - 16 b/c fps is 60
+    // Wait until 16ms has ellapsed since the last frame
     while (!SDL_TICKS_PASSED(SDL_GetTicks(), ticksLastFrame + FRAME_TARGET_TIME));
 
     // Delta time is the difference in ticks from last frame converted to seconds
     float deltaTime = (SDL_GetTicks() - ticksLastFrame) / 1000.0f;
 
-    // Clamp delta time to a maximum value so it doesn't get arbitrarily large
+    // Clamp deltaTime to a maximum value
     deltaTime = (deltaTime > 0.05f) ? 0.05f : deltaTime;
 
-    // Sets the new ticks fro the current frame to be used in the next pass
+    // Sets the new ticks for the current frame to be used in the next pass
     ticksLastFrame = SDL_GetTicks();
 
-    // Here we call the manager.update to update all entities as a function of deltatime
     manager.Update(deltaTime);
 
     HandleCameraMovement();
+    CheckCollisions();
 }
 
-void Game::Render()
+void Game::Render() 
 {
     SDL_SetRenderDrawColor(renderer, 21, 21, 21, 255);
     SDL_RenderClear(renderer);
 
-    // TODO:
-    // Here we call the manager.render to render all entities
-    if (manager.HasNoEntities())
+    if (manager.HasNoEntities()) 
     {
-        return; 
+        return;
     }
 
     manager.Render();
@@ -168,7 +184,32 @@ void Game::HandleCameraMovement()
     camera.y = camera.y > camera.h ? camera.h : camera.y;
 }
 
-void Game::Destroy()
+void Game::CheckCollisions() 
+{
+    CollisionType collisionType = manager.CheckCollisions();
+    if (collisionType == PLAYER_ENEMY_COLLISION) 
+    {
+        ProcessGameOver();
+    }
+    if (collisionType == PLAYER_LEVEL_COMPLETE_COLLISION) 
+    {
+        ProcessNextLevel(1);
+    }
+}
+
+void Game::ProcessNextLevel(int levelNumber) 
+{
+    std::cout << "Next Level" << std::endl;
+    isRunning = false;
+}
+
+void Game::ProcessGameOver() 
+{
+    std::cout << "Game Over" << std::endl;
+    isRunning = false;
+}
+
+void Game::Destroy() 
 {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
