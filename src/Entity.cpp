@@ -1,3 +1,4 @@
+#include <iostream>
 #include "./Entity.h"
 
 Entity::Entity(EntityManager& manager): entityManager(manager) 
@@ -40,6 +41,6 @@ void Entity::ListAllComponents() const
 {
     for (auto mapElement: componentTypeMap)
     {
-        std::cout << "   Component<" << mapElement.first->name() << ">" << std::endl;
+        std::cout << "Component<" << mapElement.first->name() << ">" << std::endl;
     }
 }
